@@ -35,7 +35,7 @@ static double call_crit_price(double S_star, double X,
 }
 
 /*------------------------------------------------------------------------*/
-/* Critical Put Price Equation                                           */
+/* Critical Put Price Equation                                            */
 /* Equation for the critical price above which the American Call option   */
 /* should be exercised                                                    */
 /* This equation is solved below by using bisection                       */

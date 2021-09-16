@@ -26,7 +26,8 @@ static short arithmetic_asian_setup(
 	/* two variables by assuming that the average is lognormally */
 	/* distributed and match the first two moments.  See Levy    */
 	/* for details                                               */
-	/* Input Parameters For Arithmetic Asian Option Valuation */
+	
+	/* Input Parameters For Arithmetic Asian Option Valuation    */
 	double Fwd_Avg,	 /* Current estimate for the average from the
 								start of the average period until the end of
 								the averaging period */
@@ -110,7 +111,7 @@ static short arithmetic_asian_setup(
 	}
 
 	/* Levy's Approximation for an arithmetic asian option as
-	  extended by Garman */
+	   extended by Garman */
 	g = r - q;
 	if (g < 0.0001)
 		g = 0.0001;
@@ -138,8 +139,8 @@ static short arithmetic_asian_setup(
 
 	if (start == 0.0)
 	{ /* Compute Sa=E[M(t)] and D=E[M(t)^2] via <7b> and <8b> on
-								p. 480 of Levy's "Pricing European currency options "
-								*/
+		p. 480 of Levy's "Pricing European currency options "
+	  */
 		*Sa = exp(-r * stop) * Fwd_Avg / stop / g * (exp(g * stop) - 1.);
 		Y = 2. * Fwd_Avg * Fwd_Avg / (g + var);
 		Y *= ((exp((2. * g + var) * stop) - 1.) / (2. * g + var) -
@@ -148,8 +149,8 @@ static short arithmetic_asian_setup(
 	}
 	else
 	{ /* Compute Sa=E[M(t)] and D=E[M(t)^2] via <7b> and <8b> on
-				 p. 480 of Levy's "Pricing European currency options "
-			 */
+		p. 480 of Levy's "Pricing European currency options "
+	  */
 
 		*Sa = exp(-r * stop) * Fwd_Avg * exp(g * start) / (stop - start) / g * (exp(g * (stop - start)) - 1.);
 		Y = 2. * Fwd_Avg * Fwd_Avg * exp((2. * g + var) * start) / (g + var) *

@@ -11,7 +11,7 @@ static double **m_chol_corr = NULL;
 /*------------------------------------------------------------------------*/
 /* Generate Correlated Settlement Prices S_t[i] based on the starting     */
 /* prices S[i],                                                           */
-/*	the Cholesky Decomposition of the correlation matrix chol_corr[i][j],  */
+/*	the Cholesky Decomposition of the correlation matrix chol_corr[i][j], */
 /* the lognormal means mean[i] = ((r - q[i]) - vol[i] ^ 2 / 2) * t[i]     */
 /* and the lognormal variances var[i] = vol[i] * sqrt(t[i])               */
 /* nCom = # of commodities in the basket                                  */
