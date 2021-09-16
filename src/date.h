@@ -5,7 +5,11 @@
 #define TRUE 1
 
 typedef long date_t;
-enum ERRTYPE {ERR_FAIL, ERR_OK};
+enum ERRTYPE
+{
+    ERR_FAIL,
+    ERR_OK
+};
 
 short noerr(ERRTYPE errcode);
 ERRTYPE julday(int mm, int id, int iyyy, date_t *juldate);

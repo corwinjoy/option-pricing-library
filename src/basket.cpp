@@ -20,13 +20,13 @@ static double **m_chol_corr = NULL;
 /* Derivative Securities, 2nd Ed., p. 331"                                */
 /*------------------------------------------------------------------------*/
 static short GeneratePrices(double *S,
-					int nCom, unsigned long nSim, double *S_t) {
+							int nCom, unsigned long nSim, double *S_t)
+{
 	int i, j;
 	short status;
 
-	assert(m_epsilon != NULL); /* Must have alloced storage space for rnd #s */
+	assert(m_epsilon != NULL);		/* Must have alloced storage space for rnd #s */
 	assert(m_corr_epsilon != NULL); /* Must have alloced storage space for rnd #s */
-
 
 	/* Generate Quasi-Random numbers and store them in m_epsilon */
 	status = rvsf(m_epsilon, nCom, nSim, SEQ_EXACT);
@@ -34,15 +34,16 @@ static short GeneratePrices(double *S,
 		return FALSE;
 
 	/* Convert the iid normal deviates in into correlated random #s*/
-	for (i=0; i<nCom; i++) {
+	for (i = 0; i < nCom; i++)
+	{
 		m_corr_epsilon[i] = 0.0;
-		for (j=0; j<=i; j++)
+		for (j = 0; j <= i; j++)
 			m_corr_epsilon[i] += m_epsilon[j] * m_chol_corr[i][j];
 	}
 
 	/* Convert the correlated random numbers into prices */
-	for (i=0; i<nCom; i++)
-		S_t[i] = S[i] * exp( m_mean[i] + m_corr_epsilon[i] * m_var[i]);
+	for (i = 0; i < nCom; i++)
+		S_t[i] = S[i] * exp(m_mean[i] + m_corr_epsilon[i] * m_var[i]);
 
 	return TRUE;
 }
@@ -52,36 +53,38 @@ static short GeneratePrices(double *S,
 /* basket option pricing                                                  */
 /*------------------------------------------------------------------------*/
 short GenPricesSetup(double *vol, double **corr,
-					double r, double *q, double *t, int nCom
-					){
+					 double r, double *q, double *t, int nCom)
+{
 	int i;
 
-	m_epsilon = (double *) calloc(nCom, sizeof(double));
-	m_corr_epsilon = (double *) calloc(nCom, sizeof(double));
+	m_epsilon = (double *)calloc(nCom, sizeof(double));
+	m_corr_epsilon = (double *)calloc(nCom, sizeof(double));
 	if (m_epsilon == NULL || m_corr_epsilon == NULL)
 		return FALSE;
 
 	/* initialize the lognormal mean and variance for each commodity via */
 	/* lognormal means mean[i] = ((r - q[i]) - vol[i] ^ 2 / 2) * t[i]    */
 	/* lognormal variances var[i] = vol[i] * sqrt(t[i])                  */
-	m_mean = (double *) calloc(nCom, sizeof(double));
-	m_var = (double *) calloc(nCom, sizeof(double));
+	m_mean = (double *)calloc(nCom, sizeof(double));
+	m_var = (double *)calloc(nCom, sizeof(double));
 	if (m_mean == NULL || m_var == NULL)
 		return FALSE;
 
-	for (i=0; i<nCom; i++) {
-   	if (t[i] < 0) {
-      	m_mean[i] = 0.0;
-         m_var[i] = 0.0;
-      }
-      else {
+	for (i = 0; i < nCom; i++)
+	{
+		if (t[i] < 0)
+		{
+			m_mean[i] = 0.0;
+			m_var[i] = 0.0;
+		}
+		else
+		{
 			m_mean[i] = ((r - q[i]) - vol[i] * vol[i] / 2.0) * t[i];
 			m_var[i] = vol[i] * sqrt(t[i]);
-      }
+		}
 	}
 
 	m_chol_corr = Cholesky(corr, nCom);
-
 
 	return TRUE;
 }
@@ -89,7 +92,8 @@ short GenPricesSetup(double *vol, double **corr,
 /*------------------------------------------------------------------------*/
 /* Routine to free memory allocated by basket_setup                       */
 /*------------------------------------------------------------------------*/
-void GenPricesCleanup(void){
+void GenPricesCleanup(void)
+{
 	free(m_epsilon);
 	m_epsilon = NULL;
 
@@ -103,15 +107,16 @@ void GenPricesCleanup(void){
 	m_var = NULL;
 
 	deleteMatrix(m_chol_corr);
-   m_chol_corr = NULL;
-	}
+	m_chol_corr = NULL;
+}
 
 /*------------------------------------------------------------------------*/
 /* Basket Call Option: Max( w1 * S1 + w2 * S2 + ... + wn * Sn - X, 0)     */
 /*------------------------------------------------------------------------*/
 short basket_price(double *S, double X, double *w,
-					double r, double exp_t, int nCom,
-					unsigned long nSim, OPTTYPE call_put, double *result){
+				   double r, double exp_t, int nCom,
+				   unsigned long nSim, OPTTYPE call_put, double *result)
+{
 	unsigned long i;
 	int j;
 	double basket_index, sum;
@@ -124,18 +129,19 @@ short basket_price(double *S, double X, double *w,
 	assert(m_mean != NULL);
 	assert(m_var != NULL);
 
-	S_t = (double *) calloc(nCom, sizeof(double));
+	S_t = (double *)calloc(nCom, sizeof(double));
 	if (S_t == NULL)
 		return FALSE;
 
 	rvsf_reset(); /* Reset Faure Sequence Generator To Start At Beginning */
 	sum = 0.0;
-	for (i=0; i<nSim; i++) {
+	for (i = 0; i < nSim; i++)
+	{
 		status = GeneratePrices(S, nCom, nSim, S_t);
 		if (status == FALSE)
 			return FALSE;
 		basket_index = 0.0;
-		for (j=0; j<nCom; j++)
+		for (j = 0; j < nCom; j++)
 			basket_index += w[j] * S_t[j];
 		if (call_put == OPT_CALL)
 			sum += MAX(basket_index - X, 0);
@@ -144,7 +150,7 @@ short basket_price(double *S, double X, double *w,
 	}
 
 	sum /= nSim;
-	sum *= exp(-r*exp_t);
+	sum *= exp(-r * exp_t);
 
 	*result = sum;
 
@@ -170,13 +176,14 @@ short basket_price(double *S, double X, double *w,
 /* Wrapper to call the above routines                                     */
 /*------------------------------------------------------------------------*/
 short basket(double *S, double X, double *vol, double *w, double **corr, double r,
-					double *q, double *t, double exp_t, int nCom,
-					unsigned long nSim, OPTTYPE call_put, SENSTYPE sens, double *result){
+			 double *q, double *t, double exp_t, int nCom,
+			 unsigned long nSim, OPTTYPE call_put, SENSTYPE sens, double *result)
+{
 #if 0
 	double dx, f1, f2, f3;
 #endif
 	short status;
-	short (*val_fn) (double *S, double X, double *w,
+	short (*val_fn)(double *S, double X, double *w,
 					double r, double exp_t, int nCom,
 					unsigned long nSim, OPTTYPE call_put, double *result);
 	int i;
@@ -185,31 +192,35 @@ short basket(double *S, double X, double *vol, double *w, double **corr, double 
 	if (result == NULL)
 		return FALSE;
 
-	if (S == NULL || vol == NULL || w == NULL || corr == NULL || q == NULL
-			|| t == NULL)  {
+	if (S == NULL || vol == NULL || w == NULL || corr == NULL || q == NULL || t == NULL)
+	{
 		*result = 0.0;
 		return FALSE;
 	}
 
-	if (*corr == NULL) {
+	if (*corr == NULL)
+	{
 		*result = 0.0;
 		return FALSE;
 	}
 
 	/* Check Input Parameters */
-	if (call_put != OPT_CALL && call_put != OPT_PUT) {
+	if (call_put != OPT_CALL && call_put != OPT_PUT)
+	{
 		*result = 0.0;
 		return FALSE;
 	}
 	/* Check Inputs */
-	if (r < 0) {
+	if (r < 0)
+	{
 		*result = 0.0;
 		return FALSE;
 	}
 
 	/* Check Inputs */
-	for (i=0; i<nCom; i++)
-		if ( S[i] <= 0 || vol[i] < INPUT_UNDERFLOW || q[i] < 0) {
+	for (i = 0; i < nCom; i++)
+		if (S[i] <= 0 || vol[i] < INPUT_UNDERFLOW || q[i] < 0)
+		{
 			*result = 0.0;
 			return FALSE;
 		}
@@ -219,12 +230,13 @@ short basket(double *S, double X, double *vol, double *w, double **corr, double 
 	if (status == FALSE)
 		return FALSE;
 
-	switch(sens) {
-		case SENS_PRICE:
-			status =  (*val_fn)(S, X, w, r, exp_t, nCom,
-						nSim, call_put, result);
-			GenPricesCleanup();
-         return status;
+	switch (sens)
+	{
+	case SENS_PRICE:
+		status = (*val_fn)(S, X, w, r, exp_t, nCom,
+						   nSim, call_put, result);
+		GenPricesCleanup();
+		return status;
 #if 0
 		case SENS_DELTA:
 			dx = S / (double) eps;
@@ -261,9 +273,8 @@ short basket(double *S, double X, double *vol, double *w, double **corr, double 
 			*result = (f2 - f1) / dx;
 			return status;
 #endif
-		default: /* Invalid sensitivity */
-			*result = 0.0;
-			return FALSE;
+	default: /* Invalid sensitivity */
+		*result = 0.0;
+		return FALSE;
 	}
 }
-
